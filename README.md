@@ -1,15 +1,15 @@
-Let us appriciate the [`list`][list] API.
+Let us appriciate the [`list`][source] API.
 
 ## Outline
 
 - [Preface](#preface)
-- [source code of list.h][list]
+- [source code of list.h][source]
 
 ## Preface
 
 A recurring task in C programs is the handling of doubly linked lists. 
 The kernel too is required to handle such lists. 
-[List][list] is standard list implementation of the kernel.
+[List][source] is standard list implementation of the kernel.
 
 When I read this code, I found `struct list_head` is used without being defined. I think it's hiden in macro. Therefore, I write a `try.c` :
 
@@ -49,10 +49,10 @@ The code of `main` show one way to initialize struct.
 
 
 
-## list.h
+## source code
 
-This file can be found in `include/linux/list.h`.
+`list.h` can be found in `include/linux/list.h`: [link](list.h)
 
-Here is the [link](list.h)
+`try_expand.c` : [link](try_expand.c)
 
-[list]: #listh
+[source]: #source-code
