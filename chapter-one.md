@@ -117,3 +117,17 @@ Modules are used to dynamically add functionality to the kernel at run time — 
 ### List Handling
 
 list handling API - [list-example](list-example)
+
+Even if there is only one list element in the structure, this entry is used to find the correct start address of the instance by means of
+pointer arithmetic; the address is translated into the required data type by means of type conversion.
+
+### Object Management and Reference Counting
+
+Use generic kernel object mechanism to :
+
+- Reference Counting
+- Managementof lists of object
+- Locking of sets
+- Exporting object properties into userspace (via `sysfs` filesystem)
+
+kernel object API - [kernel-object](kernel-object)
