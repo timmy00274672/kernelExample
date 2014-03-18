@@ -1,13 +1,11 @@
-# 1 "try.c"
-# 1 "/home/yuting/c-workspace/kernelExample/list-example//"
+# 1 "/usr/src/linux-headers-3.11.0-12-generic/include/linux/list.h"
 # 1 "<command-line>"
 # 1 "/usr/include/stdc-predef.h" 1 3 4
 # 30 "/usr/include/stdc-predef.h" 3 4
 # 1 "/usr/include/x86_64-linux-gnu/bits/predefs.h" 1 3 4
 # 31 "/usr/include/stdc-predef.h" 2 3 4
 # 1 "<command-line>" 2
-# 1 "try.c"
-# 1 "/usr/src/linux-headers-3.11.0-12-generic/include/linux/list.h" 1
+# 1 "/usr/src/linux-headers-3.11.0-12-generic/include/linux/list.h"
 
 
 
@@ -686,13 +684,4 @@ static inline void hlist_move_list(struct hlist_head *old,
  if (new->first)
   new->first->pprev = &new->first;
  old->first = ((void *)0);
-}
-# 2 "try.c" 2
-
-int main(int argc, char const *argv[])
-{
- struct list_head hi = { &(hi), &(hi) };
- int a = 3;
- container_of(hi, struct list_head, hi);
- return 0;
 }
