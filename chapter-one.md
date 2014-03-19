@@ -4,24 +4,8 @@
 
 - what is "namespace" ?
 
-	During the development of kernel 2.6, support for namespaces was integrated into numerous subsystems.
-	This allows different processes to have different views of the system. Traditionally, Linux (andUnixin
-	general) use numerous global quantities, for instance, process identifiers: Every process in the system is
-	equipped with a unique identifier (ID), and this ID can be employed by users (or other processes) to refer
-	to the process — by sending it a signal, for instance. With namespaces, formerly global resources are
-	grouped differently: Every namespace can contain a specific set of PIDs, or can provide different views
-	of the filesystem, where mounts in one namespace do not propagate into different namespaces.
-	Namespaces are useful; for example, they are beneficial for hosting providers: Instead of setting up
-	one physical machine per customer, they can instead usecontainersimplemented with namespaces to
-	create multiple views of the system where each seems to be a complete Linux installation from within
-	the container and does not interact with other containers: They are separated and segregated from each
-	other. Every instance looks like a single machine running Linux, but in fact, many such instances can
-	operate simultaneously on a physical machine. This helps use resources more effectively. In contrast to
-	full virtualization solutions like KVM, only a single kernel needs to run on the machine and is responsible
-	to manage all containers.
-	Not all parts of the kernel are yet fully aware of namespaces, and I will discuss to what extent support is
-	available when we analyze the various subsystems.
-
+	During the development of kernel 2.6, support for namespaces was integrated into numerous subsystems. This allows different processes to have different views of the system. Traditionally, Linux (andUnixin general) use numerous global quantities, for instance, process identifiers: Every process in the system is equipped with a unique identifier (ID), and this ID can be employed by users (or other processes) to refer to the process — by sending it a signal, for instance. With namespaces, formerly global resources are grouped differently: Every namespace can contain a specific set of PIDs, or can provide different views of the filesystem, where mounts in one namespace do not propagate into different namespaces. Namespaces are useful; for example, they are beneficial for hosting providers: Instead of setting up one physical machine per customer, they can instead usecontainersimplemented with namespaces to create multiple views of the system where each seems to be a complete Linux installation from within the container and does not interact with other containers: They are separated and segregated from each other. Every instance looks like a single machine running Linux, but in fact, many such instances can operate simultaneously on a physical machine. This helps use resources more effectively. In contrast to full virtualization solutions like KVM, only a single kernel needs to run on the machine and is responsible to manage all containers. Not all parts of the kernel are yet fully aware of namespaces, and I will discuss to what extent support is available when we analyze the various subsystems.
+	
 ### Address Spaces and Privilege Levels
 
 - All modern CPUs offer several privilege levels in which processes can
