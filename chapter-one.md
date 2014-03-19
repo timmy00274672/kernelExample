@@ -131,3 +131,50 @@ Use generic kernel object mechanism to :
 - Exporting object properties into userspace (via `sysfs` filesystem)
 
 kernel object API - [kernel-object](kernel-object)
+
+### Data type
+
+The kernel use `typedef` to make itself independent of architecture specific featrues.
+
+Examples:
+- `sector_t`
+- `pid_t`
+- `_s8`, `_u8` ... : (signed/unsigned + #bits)
+
+This kind of varialbes **must** not ~~accessed directly~~, but via **auxiliary functions**.
+
+#### Bit Lengths
+
+**bit lengths** for standard data types on individual processors may be different. At certain points, the kernel must make use of variables with an exact, clearly defined number of bits — for example, when data structures need to be stored on hard disk.
+
+#### Byte Order
+
+Modern computers use either the **big endian** or **little endian** format. (some architectures such as MIPS support both variants)
+![](img/1_Endian.png)
+
+- Big : the MSB is stored at the lowest address and the significance of the bytes decreases as the addresses increase.
+- Little : the LSB is stored at the lowest address and the ignificance of the bytes increases as the addresses increase.
+
+The kernel provides some functions and macros to covert between both. Example:
+
+- `cpu_to_le64` : converts a 64-bit data type to little endian format
+- `le64_to_cpu` 
+
+#### Pre-CPU Variables
+
+They are declared with `DEFINE_PER_CPU(name, type)`.
+
+For
+
+- single-processor systems: This is not different from regular variable declaration.
+- SMP systems with several CPUs: 
+	
+	An instance of the variable is created for each CPU. The instance for a particular CPU is selected with `get_cpu(name, cpu)` , where `smp_processor_id()` , which returns the identifier of the active processor, is usually used as the argument for cpu.
+
+	Employing per-CPU variables has the advantage that the data required are more likely to be present in the cache of a processor and can therefore be accessed faster. This concept also skirts round several communication problems that would arise when using variables that can be accessed by all CPUs of a multiprocessor system.
+
+#### Access to Userspace
+
+At many points in the source code there are pointers labeled `__user` identifying pointers to areas in user address space that may not be de-referenced without further precautions.
+
+This is because memory is mapped via **page tables** into the userspace portion of the virtual address space and not directly mapped by physical memory. Therefore the kernel needs to ensure that the page frame in RAM that backs the destination is actually present.
