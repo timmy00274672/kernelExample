@@ -3,12 +3,14 @@ This repo is my notes for **Professional Linux® Kernel Architecture** by *Wolfg
 [1]:http://cse.yeditepe.edu.tr/~kserdaroglu/spring2014/cse331/termproject/BOOKS/ProfessionalLinuxKernelArchitecture-WolfgangMauerer.pdf
 
 ## Note For Each Chapter
-Chapter 1 : [chapter one](chapter-one.md)
+Chapter 1 : [Introduction And Overview](chapter-one.md)
+Chapter 2 : [Process Management and Scheduling](chapter-two.md)
 
 ## API Browsing
 
 - [list-example](list-example)
-- [kernel-example](kernel-example)
+- [kernel-object](kernel-object)
+- [sched](sched)
 
 ## Reference
 
