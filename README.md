@@ -8,3 +8,8 @@ Chapter 1 : [chapter one](chapter-one.md)
 ## API Browsing
 
 - [list-example](list-example)
+- [kernel-example](kernel-example)
+
+## Reference
+
+The works by Corbet et al. [CRKH05], Venkateswaran [Ven08], and Quade/Kunst [QK06] fill in this gap and discuss how to create new code, especially for drivers, by countless practical examples.
