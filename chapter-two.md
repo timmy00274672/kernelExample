@@ -81,6 +81,10 @@ Priority: (From Low to High)
 
 All algorithms of the Linux kernel concerned with processes and programs are built around a data structure named `task_struct` and defined in `include/sched.h`. Disscss [here](sched).
 
+### Process Types
+
+The processes are generated using the `fork` and `exec` system calls:
+
 # Linux philosophy:
 
 Since Linux is optimized for throughput and tries to handle common cases as fast as possible, guaranteed response times are only very hard to achieve.

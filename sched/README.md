@@ -5,7 +5,50 @@
 
 In this file, we first read the `task_struct` part.
 
+#### task state
+
+- `EXIT_DEAD` : is the state after an appropriate `wait` system call has been issued and before the task is completely removed from the system. This state is only of importance if multiple threads issue `wait` calls for the same task.
+
+```c
+
+	/*
+	 * Task state bitmask. NOTE! These bits are also
+	 * encoded in fs/proc/array.c: get_task_state().
+	 *
+	 * We have two separate sets of flags: task->state
+	 * is about runnability, while task->exit_state are
+	 * about the task exiting. Confusing, but this way
+	 * modifying one set can't modify the other one by
+	 * mistake.
+	 */
+	#define TASK_RUNNING		0
+	#define TASK_INTERRUPTIBLE	1
+	#define TASK_UNINTERRUPTIBLE	2
+	#define __TASK_STOPPED		4
+	#define __TASK_TRACED		8
+	/* in tsk->exit_state */
+	#define EXIT_ZOMBIE		16
+	#define EXIT_DEAD		32
+	/* in tsk->state again */
+	#define TASK_DEAD		64
+	#define TASK_WAKEKILL		128
+	#define TASK_WAKING		256
+	#define TASK_PARKED		512
+	#define TASK_STATE_MAX		1024
+
+	#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWP"
+```
 ####  task_struct
+
+This code represents a specific aspect of the process:
+
+- State and execution information such as pending signals, binary format used (and any emulation information for binary formats of other systems), process identification number (pid), pointers to parents and other related processes, priorities, and time information on program execution (e.g., CPU time).
+- Information on allocated virtual memory.
+- Process credentials such as user and group ID, capabilities, 2 and so on. System calls can be used to query (or modify) these data; I deal with these in greater detail when describing the specific subsystems.
+- Files used: Not only the binary file with the program code but also filesystem information on all files handled by the process must be saved.
+- Thread information, which records the CPU-specific runtime data of the process (the remaining fields in the structure are not dependent on the hardware used).
+- Information on interprocess communication required when working with other applications.
+- Signal handlers used by the process to respond to incoming signals.
 
 ```c
 
@@ -431,3 +474,7 @@ In this file, we first read the `task_struct` part.
 	#endif
 	};
 ```
+
+#### Resource limit
+
+Linux provides the resource limit (`rlimit`) mechanism to impose certain system resource usage limits on processes. The mechanism makes use of the `rlim` array in task_struct , whose elements are of the struct rlimit type.
