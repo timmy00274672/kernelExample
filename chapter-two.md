@@ -83,7 +83,14 @@ All algorithms of the Linux kernel concerned with processes and programs are bui
 
 ### Process Types
 
-The processes are generated using the `fork` and `exec` system calls:
+The processes are generated using the `fork`, `exec`, `clone` system calls:
+
+- `fork` : copy the current process as *child process*. 
+
+	All resources are copied(memory data, open files, working directory)
+
+- `exec` : using current process to running another process
+- `clone` : it's used to implement **thread**
 
 # Linux philosophy:
 
