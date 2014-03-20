@@ -11,6 +11,7 @@ Chapter 2 : [Process Management and Scheduling](chapter-two.md)
 - [list-example](list-example)
 - [kernel-object](kernel-object)
 - [sched](sched)
+- [namespace](namespace)
 
 ## Reference
 
