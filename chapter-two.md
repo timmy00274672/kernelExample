@@ -20,6 +20,9 @@ To support *multitasking*, the kernel need to deal lot of issues, like:
 		- [Implementation][Implementation]
 			- [UTS namespaces][UTS namespaces]
 			- [User Namespace][User Namespace]
+	- [Process Indentification Number][Process Indentification Number]
+		- [Managing PIDs][Managing PIDs]
+		- [Overview Of Namespace][Overview Of Namespace]
 
 ## Process Priorities
 
@@ -319,7 +322,186 @@ Recall :
 -	A process can have a normal unprivileged user ID outside a user namespace while at the same time having a user ID of 0 inside the namespace.
 -	Starting in Linux 3.8, unprivileged processes can create user namespaces, which opens up a raft of interesting new possibilities for applications: since an otherwise unprivileged process can hold root privileges inside the user namespace, unprivileged applications now have access to functionality that was formerly limited to root.
 
-I found there is no user-namespace related code in `nsproxy.h`, based on *kernel v3.11.10*.
+I found there is no user-namespace related code in `nsproxy.h`, based on *kernel v3.11.10*, but with `user_namespace.h` and `user_namespace.c`.
+
+Therefore, I use below to find the associated files.
+	
+	find -name '*.h' | xargs grep -l '#include <linux/user_namespace.h>'
+
+Results:
+
+	./include/linux/sock_diag.h
+	./include/linux/init_task.h
+
+How to coperate with each others is omitted here temporaity. I read `user_namespace.h` and `user_namespace.c` first.
+
+The user_namespace struct :
+
+```c
+struct user_namespace {
+	struct uid_gid_map	uid_map;
+	struct uid_gid_map	gid_map;
+	struct uid_gid_map	projid_map;
+	atomic_t		count;
+	struct user_namespace	*parent;
+	int			level;
+	kuid_t			owner;
+	kgid_t			group;
+	unsigned int		proc_inum;
+
+	/* Register of per-UID persistent keyrings for this namespace */
+	#ifdef CONFIG_PERSISTENT_KEYRINGS
+		struct key		*persistent_keyring_register;
+		struct rw_semaphore	persistent_keyring_register_sem;
+	#endif
+};
+```
+
+### Process Indentification Number
+
+[Process Indentification Number]: #process-identification-number
+
+It's called PID here. However, each process characterized also by other identifiers than PID. Examples:
+
+- *PID* 
+	- PID namespaces are organized in a hierarchy.
+	- We have to distinguish between **local** and **global** IDs
+		- Global IDs : 
+			valid within the kernel itself and in the initial namespace to which the `init` tasks started during *boot* belongs.
+		- Local IDs :
+			belong to a specific namespace and are not globally valid. For each ID type, they are valid within the namespace to which they belong, but identifiers of identical type may appear with the same ID number in a different namespace.
+	- `task_struct->pid` 
+- *TGID* : thread group ID
+	- `task_struct->tgid`
+- *PGID* : process group
+	- relative *system call* : `setpgrp`
+	- Process groups facilitate the sending of signals to all members of the group
+	- `task_struct->signal->__pgrp` denoted the global PGID
+- *SID* : session ID
+	- relative *system call* : `setsid`
+	- Several process groups can be combined in a session.
+	- It is used in terminal programming 
+	- `task_struct->signal->__session` denotes the global SID
+
+Recall the `task_struct` in *sched.h* : 
+
+```c
+struct task_struct{
+...
+	pid_t pid;
+	pid_t tgid;
+...
+}
+```
+
+#### Managing PIDs
+
+[Managing PIDs]: #managing-pids
+
+In addition to these two fields(`pid`, `tgid`), the kernel needs to find a way to manage all local per-namespace quantities, as well as the other identifiers like TID and SID. This requires several interconnected data structures and numerous auxiliary functions.
+
+The data structures required to represent IDs themselves is `struct pid_namespace` defined in *linux/pid_namespace.h*.
+
+- souce code
+
+	```c
+	struct pid_namespace {
+		struct kref kref;
+		struct pidmap pidmap[PIDMAP_ENTRIES];
+		struct rcu_head rcu;
+		int last_pid;
+		unsigned int nr_hashed;
+		struct task_struct *child_reaper;
+		struct kmem_cache *pid_cachep;
+		unsigned int level;
+		struct pid_namespace *parent;
+	#ifdef CONFIG_PROC_FS
+		struct vfsmount *proc_mnt;
+		struct dentry *proc_self;
+	#endif
+	#ifdef CONFIG_BSD_PROCESS_ACCT
+		struct bsd_acct_struct *bacct;
+	#endif
+		struct user_namespace *user_ns;
+		struct work_struct proc_work;
+		kgid_t pid_gid;
+		int hide_pid;
+		int reboot;	/* group exit code if this pidns was rebooted */
+		unsigned int proc_inum;
+	};
+	```
+- `child_reaper` :
+
+	Every PID namespace is equipped with a task that assumes the role taken by `init` in the global picture. One of the purposes of `init` is to call `wait4` for orphaned tasks, and this must likewise be done by the namespace-specific init variant. A pointer to the task structure of this task is stored in `child_reaper`.
+- `parent`, `level` : 
+
+	`parent` is pointer to the parent namespace, and `level` denotes the depth in the namespace hierarchy. The initial namespace has level 0. 
+
+	Counting the levels is important because IDs in higher levels must be visible in lower levels. From a given level setting, the kernel can infer how many IDs must be associated with a task.
+
+- Relative files:
+	
+	I use below	command:
+
+	```bash
+	find -name '*.h' | xargs grep -l '#include <linux/pid_namespace.h>'
+	```			
+
+	Results:
+		
+		./include/linux/perf_event.h
+		./include/linux/init_task.h
+
+PID management is centered around two data structures in *linux/pid.h*.
+
+- `struct pid`
+	
+	The kernel-internal representation of a *PID*
+
+	```c
+	struct pid
+	{
+		atomic_t count;
+		unsigned int level;
+		/* lists of tasks that use this pid */
+		struct hlist_head tasks[PIDTYPE_MAX];
+		struct rcu_head rcu;
+		struct upid numbers[1];
+	};	
+	```
+
+	The definition of `struct pid` is headed by a reference counter `count` . `tasks` is an array with a *hash list head* for every **ID type**. This is necessary because an ID can be used for several processes. All `task_struct` instances that share a given ID are linked on this list.
+- `struct upid`
+	
+	Store the information that is visible in a specific namespace.
+
+	```c
+	struct upid {
+		/* Try to keep pid_chain in the same cacheline as nr for find_vpid */
+		int nr;
+		struct pid_namespace *ns;
+		struct hlist_node pid_chain;
+	};
+	```
+
+	`nr` represents the numerical value of an ID, and `ns` is a pointer to the namespace to which the value belongs. All upid instances are kept on a *hash table*, and `pid_chain` allows for implementing hash overflow lists with standard methods of the kernel. 
+- `enum pid_type`
+
+	```c
+	enum pid_type
+	{
+		PIDTYPE_PID,
+		PIDTYPE_PGID,
+		PIDTYPE_SID,
+		PIDTYPE_MAX
+	};
+	```
+
+#### Overview Of Namespace
+
+[Overview Of Namespace]:#overview-of-namespace
+
+![](img/2_Overview_NS.png)
 
 # Linux philosophy:
 
